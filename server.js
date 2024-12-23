@@ -1,3 +1,4 @@
+/* eslint-disable eqeqeq */
 // requires
 const express = require("express");
 const dotenv = require("dotenv");
@@ -19,7 +20,7 @@ dotenv.config({ path: "config.env" });
 dbConnection();
 
 // Module
-if (process.env.NODE_ENV === "development") {
+if (process.env.NODE_ENV == "development") {
   app.use(morgan("dev"));
 }
 

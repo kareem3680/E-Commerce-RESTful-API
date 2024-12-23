@@ -2,22 +2,17 @@ const express = require("express");
 const brandController = require("../Controller/brandController");
 
 const router = express.Router();
-const {
-  getBrandValidator,
-  createBrandValidator,
-  updateBrandValidator,
-  deleteBrandValidator,
-} = require("../utils/validators/brandValidator");
+const brandValidator = require("../utils/validators/brandValidator");
 
 router
   .route("/")
   .get(brandController.getBrands)
-  .post(createBrandValidator, brandController.createBrand);
+  .post(brandValidator.createBrandValidator, brandController.createBrand);
 
 router
   .route("/:id")
-  .get(getBrandValidator, brandController.getSpecificBrand)
-  .put(updateBrandValidator, brandController.updateBrand)
-  .delete(deleteBrandValidator, brandController.deleteBrand);
+  .get(brandValidator.getBrandValidator, brandController.getSpecificBrand)
+  .put(brandValidator.updateBrandValidator, brandController.updateBrand)
+  .delete(brandValidator.deleteBrandValidator, brandController.deleteBrand);
 
 module.exports = router;

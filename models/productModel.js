@@ -38,14 +38,7 @@ const productSchema = new mongoose.Schema(
     priceAfterDiscount: {
       type: Number,
       trim: true,
-      max: [200000, "Too long product Price after discount"],
-      validate: {
-        validator: function (value) {
-          return value <= this.originalPrice;
-        },
-        message:
-          "Price after sale must be less than or equal to the original price",
-      },
+      max: [200000, "Too long product PriceAfterDiscount"],
     },
     colors: {
       type: [String],
@@ -62,10 +55,12 @@ const productSchema = new mongoose.Schema(
       ref: "Category",
       required: [true, "Product must belong to main category"],
     },
-    subCategory: {
-      type: mongoose.Schema.ObjectId,
-      ref: "subCategory",
-    },
+    subCategory: [
+      {
+        type: mongoose.Schema.ObjectId,
+        ref: "subCategory",
+      },
+    ],
     brand: {
       type: mongoose.Schema.ObjectId,
       ref: "Brand",
@@ -82,6 +77,22 @@ const productSchema = new mongoose.Schema(
   },
   { timestamps: true }
 );
+productSchema.pre(/^find/, function (next) {
+  this.populate({
+    path: "category",
+    select: "name -_id",
+  })
+    .populate({
+      path: "subCategory",
+      select: "name -_id",
+    })
+    .populate({
+      path: "brand",
+      select: "name -_id",
+    });
+  next();
+});
+
 const productModel = mongoose.model("Product", productSchema);
 
 module.exports = productModel;

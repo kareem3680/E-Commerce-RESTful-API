@@ -1,5 +1,5 @@
 const fs = require("fs");
-// require("colors");
+require("colors");
 const dotenv = require("dotenv");
 const Product = require("../../models/productModel");
 const dbConnection = require("../../config/dataBase");
@@ -10,7 +10,7 @@ dotenv.config({ path: "../../config.env" });
 dbConnection();
 
 // Read data
-const products = JSON.parse(fs.readFileSync("./products.json"));
+const products = JSON.parse(fs.readFileSync("./product.json"));
 
 // Insert data into DB
 const insertData = async () => {
