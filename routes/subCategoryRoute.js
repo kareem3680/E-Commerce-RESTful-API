@@ -8,6 +8,7 @@ router
   .route("/")
   .get(
     subCategoryController.createFilterObject,
+    subCategoryValidator.getAllSubCategoryValidator,
     subCategoryController.getSubCategories
   )
   .post(

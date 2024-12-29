@@ -1,6 +1,10 @@
 const { check } = require("express-validator");
 const slugify = require("slugify");
 const validatorMiddleWare = require("../../middlewares/validatorMiddleware");
+const asyncHandler = require("express-async-handler");
+const ApiError = require("../apiError");
+const brandController = require("../../Controller/brandController");
+const brandModel = require("../../models/brandModel");
 
 exports.getBrandValidator = [
   check("id").isMongoId().withMessage("Invalid Brand Id Format"),
@@ -8,6 +12,7 @@ exports.getBrandValidator = [
 ];
 
 exports.createBrandValidator = [
+  brandController.uploadBrandImage,
   check("name")
     .notEmpty()
     .withMessage("Brand name is required")
@@ -30,7 +35,20 @@ exports.deleteBrandValidator = [
 ];
 
 exports.updateBrandValidator = [
-  check("id").isMongoId().withMessage("Invalid Brand Id Format"),
+  brandController.uploadBrandImage,
+  check("id")
+    .isMongoId()
+    .withMessage("Invalid Brand Id Format")
+    .custom(
+      asyncHandler(async (id, { req }) => {
+        const documentId = req.params.id;
+        const exists = await brandModel.findById(id);
+        if (!exists) {
+          throw new ApiError(`No document For This Id: ${documentId}`, 404);
+        }
+        return true;
+      })
+    ),
   check("name")
     .isLength({ min: 3 })
     .withMessage("must be at least 3 chars")

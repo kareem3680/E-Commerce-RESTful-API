@@ -1,8 +1,6 @@
-/* eslint-disable arrow-body-style */
 const asyncHandler = require("express-async-handler");
 const ApiError = require("../utils/apiError");
 const ApiFeatures = require("../utils/apiFeatures");
-const categoryModel = require("../models/categoryModel");
 
 exports.delete = (model) => {
   return asyncHandler(async (req, res, next) => {
@@ -38,17 +36,6 @@ exports.getAll = (model, modelName) => {
     let filter = {};
     if (req.filterObject) {
       filter = req.filterObject;
-      const categoryExists = await categoryModel.findById(
-        req.filterObject.category
-      );
-      if (!categoryExists) {
-        return next(
-          new ApiError(
-            `No Category Found With This Id: ${req.filterObject.category}`,
-            404
-          )
-        );
-      }
     }
     const documentsCount = await model.countDocuments();
     const apiFeatures = new ApiFeatures(model.find(filter), req.query)

@@ -1,6 +1,10 @@
 const { check } = require("express-validator");
 const slugify = require("slugify");
 const validatorMiddleWare = require("../../middlewares/validatorMiddleware");
+const asyncHandler = require("express-async-handler");
+const ApiError = require("../apiError");
+const categoryController = require("../../Controller/categoryController");
+const categoryModel = require("../../models/categoryModel");
 
 exports.getCategoryValidator = [
   check("id").isMongoId().withMessage("Invalid Category Id Format"),
@@ -8,6 +12,7 @@ exports.getCategoryValidator = [
 ];
 
 exports.createCategoryValidator = [
+  categoryController.uploadCategoryImage,
   check("name")
     .notEmpty()
     .withMessage("Category name is required")
@@ -30,7 +35,20 @@ exports.deleteCategoryValidator = [
 ];
 
 exports.updateCategoryValidator = [
-  check("id").isMongoId().withMessage("Invalid Category Id Format"),
+  categoryController.uploadCategoryImage,
+  check("id")
+    .isMongoId()
+    .withMessage("Invalid Category Id Format")
+    .custom(
+      asyncHandler(async (id, { req }) => {
+        const documentId = req.params.id;
+        const exists = await categoryModel.findById(id);
+        if (!exists) {
+          throw new ApiError(`No document For This Id: ${documentId}`, 404);
+        }
+        return true;
+      })
+    ),
   check("name")
     .isLength({ min: 3 })
     .withMessage("must be at least 3 chars")

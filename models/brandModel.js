@@ -1,3 +1,7 @@
+const dotenv = require("dotenv");
+
+dotenv.config({ path: "config.env" });
+
 const mongoose = require("mongoose");
 
 const brandSchema = new mongoose.Schema(
@@ -19,6 +23,19 @@ const brandSchema = new mongoose.Schema(
   },
   { timestamps: true }
 );
+
+const SetImageURL = (doc) => {
+  if (doc.image) {
+    const imageURL = `${process.env.BASE_URL}/brands/${doc.image}`;
+    doc.image = imageURL;
+  }
+};
+brandSchema.post("init", (doc) => {
+  SetImageURL(doc);
+});
+brandSchema.post("save", (doc) => {
+  SetImageURL(doc);
+});
 const brandModel = mongoose.model("Brand", brandSchema);
 
 module.exports = brandModel;

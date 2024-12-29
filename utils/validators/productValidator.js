@@ -1,14 +1,15 @@
-/* eslint-disable eqeqeq */
 const { check } = require("express-validator");
 const slugify = require("slugify");
 const validatorMiddleware = require("../../middlewares/validatorMiddleware");
 const ApiError = require("../apiError");
 const categoryModel = require("../../models/categoryModel");
 const subCategoryModel = require("../../models/subCategoryModel");
+const productController = require("../../Controller/productController");
 const brandModel = require("../../models/brandModel");
 const productModel = require("../../models/productModel");
 
 exports.createProductValidator = [
+  productController.uploadProductImages,
   check("title")
     .isLength({ min: 3 })
     .withMessage("must be at least 3 chars")
@@ -56,7 +57,13 @@ exports.createProductValidator = [
     .optional()
     .isArray()
     .withMessage("Colors should be array of string"),
-  check("imageCover").notEmpty().withMessage("Product imageCover is required"),
+  check("imageCover").custom((value, { req, next }) => {
+    if (!req.files || !req.files.imageCover) {
+      throw new ApiError("Product imageCover is required", 400);
+    }
+    return true;
+  }),
+
   check("images")
     .optional()
     .isArray()
@@ -74,11 +81,14 @@ exports.createProductValidator = [
         );
       }
     }),
-  check("subCategory")
+  check("subCategories")
     .optional()
     .isMongoId()
     .withMessage("Invalid ID formate")
     .custom(async (subCategories) => {
+      if (typeof subCategories === "string") {
+        subCategories = [subCategories];
+      }
       const subCategoriesExists = await subCategoryModel.find({
         _id: { $exists: true, $in: subCategories },
       });
@@ -95,6 +105,9 @@ exports.createProductValidator = [
       }
     })
     .custom(async (subCategories, { req }) => {
+      if (typeof subCategories === "string") {
+        subCategories = [subCategories];
+      }
       const subCategoriesExists = await subCategoryModel.find({
         _id: { $exists: true, $in: subCategories },
         category: req.body.category,
@@ -139,12 +152,12 @@ exports.createProductValidator = [
 ];
 
 exports.getProductValidator = [
-  check("id").isMongoId().withMessage("Invalid ID formate"),
   check("id").isMongoId().withMessage("Invalid ID format"),
   validatorMiddleware,
 ];
 
 exports.updateProductValidator = [
+  productController.uploadProductImages,
   check("id").isMongoId().withMessage("Invalid ID format"),
   check("title")
     .isLength({ min: 3 })
@@ -213,11 +226,14 @@ exports.updateProductValidator = [
         );
       }
     }),
-  check("subCategory")
+  check("subCategories")
     .optional()
     .isMongoId()
     .withMessage("Invalid ID formate")
     .custom(async (subCategories) => {
+      if (typeof subCategories === "string") {
+        subCategories = [subCategories];
+      }
       const subCategoriesExists = await subCategoryModel.find({
         _id: { $exists: true, $in: subCategories },
       });
@@ -234,10 +250,23 @@ exports.updateProductValidator = [
       }
     })
     .custom(async (subCategories, { req }) => {
+      if (typeof subCategories === "string") {
+        subCategories = [subCategories];
+      }
       const product = await productModel.findById(req.params.id);
+      if (!product) {
+        throw new ApiError(`No document For This Id: ${req.params.id}`, 404);
+      }
+      const category = await categoryModel.findOne(product.category);
+      if (!category) {
+        throw new ApiError(
+          `Category with name ${product.category} not found`,
+          404
+        );
+      }
       const subCategoriesExists = await subCategoryModel.find({
         _id: { $exists: true, $in: subCategories },
-        category: product.category,
+        category: category.id,
       });
       if (
         subCategoriesExists.length < 1 ||

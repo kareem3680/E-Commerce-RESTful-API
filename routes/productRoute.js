@@ -9,6 +9,7 @@ router
   .get(productController.getProducts)
   .post(
     productValidator.createProductValidator,
+    productController.resizeImage,
     productController.createProduct
   );
 
@@ -18,7 +19,11 @@ router
     productValidator.getProductValidator,
     productController.getSpecificProduct
   )
-  .put(productValidator.updateProductValidator, productController.updateProduct)
+  .put(
+    productValidator.updateProductValidator,
+    productController.resizeImage,
+    productController.updateProduct
+  )
   .delete(
     productValidator.deleteProductValidator,
     productController.deleteProduct

@@ -20,7 +20,12 @@
     "no-return-await": "off",
     "no-underscore-dangle": "off",
     "class-methods-use-this": "off",
-    "no-undef": "error",
+    "eqeqeq": "off",
+    // "no-undef": "off",
+    "import/order": "off",
+    "import/no-extraneous-dependencies": "off",
+    "arrow-body-style": "off",
+    "no-use-before-define": "off",
     "prefer-destructuring": ["error", { "object": true, "array": false }],
     "no-unused-vars": ["warn", { "argsIgnorePattern": "req|res|next|val" }]
   }

@@ -12,6 +12,7 @@ router
   .get(categoryController.getCategories)
   .post(
     categoryValidator.createCategoryValidator,
+    categoryController.resizeImage,
     categoryController.createCategory
   );
 
@@ -23,6 +24,7 @@ router
   )
   .put(
     categoryValidator.updateCategoryValidator,
+    categoryController.resizeImage,
     categoryController.updateCategory
   )
   .delete(

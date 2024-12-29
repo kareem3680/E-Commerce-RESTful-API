@@ -1,3 +1,7 @@
+const dotenv = require("dotenv");
+
+dotenv.config({ path: "config.env" });
+
 const mongoose = require("mongoose");
 
 const productSchema = new mongoose.Schema(
@@ -55,7 +59,7 @@ const productSchema = new mongoose.Schema(
       ref: "Category",
       required: [true, "Product must belong to main category"],
     },
-    subCategory: [
+    subCategories: [
       {
         type: mongoose.Schema.ObjectId,
         ref: "subCategory",
@@ -83,7 +87,7 @@ productSchema.pre(/^find/, function (next) {
     select: "name -_id",
   })
     .populate({
-      path: "subCategory",
+      path: "subCategories",
       select: "name -_id",
     })
     .populate({
@@ -91,6 +95,27 @@ productSchema.pre(/^find/, function (next) {
       select: "name -_id",
     });
   next();
+});
+
+const SetImageURL = (doc) => {
+  if (doc.imageCover) {
+    const imageURL = `${process.env.BASE_URL}/products/${doc.imageCover}`;
+    doc.imageCover = imageURL;
+  }
+  if (doc.images) {
+    const imagesLest = [];
+    doc.images.forEach((image) => {
+      const imageURL = `${process.env.BASE_URL}/products/${image}`;
+      imagesLest.push(imageURL);
+    });
+    doc.images = imagesLest;
+  }
+};
+productSchema.post("init", (doc) => {
+  SetImageURL(doc);
+});
+productSchema.post("save", (doc) => {
+  SetImageURL(doc);
 });
 
 const productModel = mongoose.model("Product", productSchema);

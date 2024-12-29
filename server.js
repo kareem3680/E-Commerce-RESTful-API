@@ -1,8 +1,10 @@
-/* eslint-disable eqeqeq */
-// requires
+//
+const path = require("path");
+//
 const express = require("express");
 const dotenv = require("dotenv");
 const morgan = require("morgan");
+//
 const dbConnection = require("./config/dataBase");
 const categoryRoute = require("./routes/categoryRoute");
 const subCategoryRoute = require("./routes/subCategoryRoute");
@@ -14,6 +16,7 @@ const ApiError = require("./utils/apiError");
 // Express
 const app = express();
 app.use(express.json());
+app.use(express.static(path.join(__dirname, "uploads")));
 
 // DB Connection
 dotenv.config({ path: "config.env" });
