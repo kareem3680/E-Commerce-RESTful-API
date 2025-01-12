@@ -2,7 +2,6 @@ const { check } = require("express-validator");
 const slugify = require("slugify");
 const validatorMiddleWare = require("../../middlewares/validatorMiddleware");
 const asyncHandler = require("express-async-handler");
-const ApiError = require("../apiError");
 const categoryController = require("../../Controller/categoryController");
 const categoryModel = require("../../models/categoryModel");
 
@@ -44,7 +43,10 @@ exports.updateCategoryValidator = [
         const documentId = req.params.id;
         const exists = await categoryModel.findById(id);
         if (!exists) {
-          throw new ApiError(`No document For This Id: ${documentId}`, 404);
+          return Promise.reject({
+            message: `No document For This Id: ${documentId}`,
+            statusCode: 404,
+          });
         }
         return true;
       })

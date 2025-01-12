@@ -15,7 +15,8 @@ exports.delete = (model) => {
 exports.update = (model) => {
   return asyncHandler(async (req, res, next) => {
     const documentId = req.params.id;
-    const document = await model.findByIdAndUpdate(documentId, req.body, {
+    const { password, ...rest } = req.body;
+    const document = await model.findByIdAndUpdate(documentId, rest, {
       new: true,
     });
     if (!document) {

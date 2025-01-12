@@ -10,18 +10,20 @@ const categoryModel = require("../models/categoryModel");
 exports.uploadCategoryImage = uploadImage.uploadSingleImage("image", "name");
 
 exports.resizeImage = asyncHandler(async (req, res, next) => {
-  const filename = `category-${uuidv4()}-${Date.now()}.jpeg`;
-  const savePath = path.resolve("uploads", "categories");
-  if (!fs.existsSync(savePath)) {
-    fs.mkdirSync(savePath, { recursive: true });
+  if (req.file) {
+    const filename = `category-${uuidv4()}-${Date.now()}.jpeg`;
+    const savePath = path.resolve("uploads", "categories");
+    if (!fs.existsSync(savePath)) {
+      fs.mkdirSync(savePath, { recursive: true });
+    }
+    await sharp(req.file.buffer)
+      .resize(600, 600)
+      .toFormat("jpeg")
+      .jpeg({ quality: 95 })
+      .toFile(path.resolve(savePath, filename));
+    //save image into database
+    req.body.image = filename;
   }
-  await sharp(req.file.buffer)
-    .resize(600, 600)
-    .toFormat("jpeg")
-    .jpeg({ quality: 95 })
-    .toFile(path.resolve(savePath, filename));
-  //save image into database
-  req.body.image = filename;
   next();
 });
 

@@ -1,7 +1,6 @@
 const { check } = require("express-validator");
 const slugify = require("slugify");
 const validatorMiddleware = require("../../middlewares/validatorMiddleware");
-const ApiError = require("../apiError");
 const categoryModel = require("../../models/categoryModel");
 const subCategoryModel = require("../../models/subCategoryModel");
 const productController = require("../../Controller/productController");
@@ -49,7 +48,10 @@ exports.createProductValidator = [
     .toFloat()
     .custom((value, { req }) => {
       if (req.body.price <= value) {
-        throw new Error("Product price must be lower than original price");
+        return Promise.reject({
+          message: "Product price must be lower than original price",
+          statusCode: 404,
+        });
       }
       return true;
     }),
@@ -59,7 +61,10 @@ exports.createProductValidator = [
     .withMessage("Colors should be array of string"),
   check("imageCover").custom((value, { req, next }) => {
     if (!req.files || !req.files.imageCover) {
-      throw new ApiError("Product imageCover is required", 400);
+      return Promise.reject({
+        message: "Product imageCover is required",
+        statusCode: 404,
+      });
     }
     return true;
   }),
@@ -76,9 +81,10 @@ exports.createProductValidator = [
     .custom(async (categoryId) => {
       const categoryExists = await categoryModel.findById(categoryId);
       if (!categoryExists) {
-        return Promise.reject(
-          new ApiError(`No category found with this ID: ${categoryId}`, 404)
-        );
+        return Promise.reject({
+          message: `No category found with this ID: ${categoryId}`,
+          statusCode: 404,
+        });
       }
     }),
   check("subCategories")
@@ -96,12 +102,10 @@ exports.createProductValidator = [
         subCategoriesExists.length < 1 ||
         subCategoriesExists.length !== subCategories.length
       ) {
-        return Promise.reject(
-          new ApiError(
-            `One or more subCategories do not found with this ID: ${subCategories}`,
-            404
-          )
-        );
+        return Promise.reject({
+          message: `One or more subCategories do not found with this ID: ${subCategories}`,
+          statusCode: 404,
+        });
       }
     })
     .custom(async (subCategories, { req }) => {
@@ -116,12 +120,10 @@ exports.createProductValidator = [
         subCategoriesExists.length < 1 ||
         subCategoriesExists.length !== subCategories.length
       ) {
-        return Promise.reject(
-          new ApiError(
-            `One or more subCategories do not belong to the specified category`,
-            404
-          )
-        );
+        return Promise.reject({
+          message: `One or more subCategories do not belong to the specified category`,
+          statusCode: 404,
+        });
       }
     }),
   check("brand")
@@ -131,9 +133,10 @@ exports.createProductValidator = [
     .custom(async (brand) => {
       const brandExists = await brandModel.findById(brand);
       if (!brandExists) {
-        return Promise.reject(
-          new ApiError(`No brand found with this ID: ${brand}`, 404)
-        );
+        return Promise.reject({
+          message: `No brand found with this ID: ${brand}`,
+          statusCode: 404,
+        });
       }
     }),
   check("ratingsAverage")
@@ -198,12 +201,10 @@ exports.updateProductValidator = [
         req.body.priceAfterDiscount &&
         req.body.priceAfterDiscount >= product.price
       ) {
-        return Promise.reject(
-          new ApiError(
-            `priceAfterDiscount cannot be greater than or equal to the original price (${product.price})`,
-            400
-          )
-        );
+        return Promise.reject({
+          message: `priceAfterDiscount cannot be greater than or equal to the original price ${product.price}`,
+          statusCode: 404,
+        });
       }
     }),
   check("colors")
@@ -221,9 +222,10 @@ exports.updateProductValidator = [
     .custom(async (categoryId) => {
       const categoryExists = await categoryModel.findById(categoryId);
       if (!categoryExists) {
-        return Promise.reject(
-          new ApiError(`No category found with this ID: ${categoryId}`, 404)
-        );
+        return Promise.reject({
+          message: `No category found with this ID: ${categoryId}`,
+          statusCode: 404,
+        });
       }
     }),
   check("subCategories")
@@ -241,12 +243,10 @@ exports.updateProductValidator = [
         subCategoriesExists.length < 1 ||
         subCategoriesExists.length !== subCategories.length
       ) {
-        return Promise.reject(
-          new ApiError(
-            `One or more subCategories do not found with this ID: ${subCategories}`,
-            404
-          )
-        );
+        return Promise.reject({
+          message: `One or more subCategories do not found with this ID: ${subCategories}`,
+          statusCode: 404,
+        });
       }
     })
     .custom(async (subCategories, { req }) => {
@@ -255,14 +255,17 @@ exports.updateProductValidator = [
       }
       const product = await productModel.findById(req.params.id);
       if (!product) {
-        throw new ApiError(`No document For This Id: ${req.params.id}`, 404);
+        return Promise.reject({
+          message: `No document For This Id: ${req.params.id}`,
+          statusCode: 404,
+        });
       }
       const category = await categoryModel.findOne(product.category);
       if (!category) {
-        throw new ApiError(
-          `Category with name ${product.category} not found`,
-          404
-        );
+        return Promise.reject({
+          message: `Category with name ${product.category} not found`,
+          statusCode: 404,
+        });
       }
       const subCategoriesExists = await subCategoryModel.find({
         _id: { $exists: true, $in: subCategories },
@@ -272,12 +275,10 @@ exports.updateProductValidator = [
         subCategoriesExists.length < 1 ||
         subCategoriesExists.length !== subCategories.length
       ) {
-        return Promise.reject(
-          new ApiError(
-            `One or more subCategories do not belong to the specified category`,
-            404
-          )
-        );
+        return Promise.reject({
+          message: `One or more subCategories do not belong to the specified category`,
+          statusCode: 404,
+        });
       }
     }),
   check("brand")
@@ -287,9 +288,10 @@ exports.updateProductValidator = [
     .custom(async (brand) => {
       const brandExists = await brandModel.findById(brand);
       if (!brandExists) {
-        return Promise.reject(
-          new ApiError(`No brand found with this ID: ${brand}`, 404)
-        );
+        return Promise.reject({
+          message: `No brand found with this ID: ${brand}`,
+          statusCode: 404,
+        });
       }
     }),
   check("ratingsAverage")

@@ -2,7 +2,6 @@ const { check } = require("express-validator");
 const slugify = require("slugify");
 const validatorMiddleWare = require("../../middlewares/validatorMiddleware");
 const asyncHandler = require("express-async-handler");
-const ApiError = require("../apiError");
 const categoryModel = require("../../models/categoryModel");
 
 exports.getSubCategoryValidator = [
@@ -25,10 +24,10 @@ exports.getAllSubCategoryValidator = [
           req.filterObject.category
         );
         if (!categoryExists) {
-          throw new ApiError(
-            `No Category Found With This Id: ${req.filterObject.category}`,
-            404
-          );
+          return Promise.reject({
+            message: `No document For This Id: ${req.filterObject.category}`,
+            statusCode: 404,
+          });
         }
         return true;
       })
@@ -58,9 +57,10 @@ exports.createSubCategoryValidator = [
     .custom(async (categoryId) => {
       const categoryExists = await categoryModel.findById(categoryId);
       if (!categoryExists) {
-        return Promise.reject(
-          new ApiError(`No category found with this ID: ${categoryId}`, 404)
-        );
+        return Promise.reject({
+          message: `No document For This Id: ${categoryId}`,
+          statusCode: 404,
+        });
       }
     }),
   validatorMiddleWare,
@@ -98,9 +98,10 @@ exports.updateSubCategoryValidator = [
     .custom(async (categoryId) => {
       const categoryExists = await categoryModel.findById(categoryId);
       if (!categoryExists) {
-        return Promise.reject(
-          new ApiError(`No category found with this ID: ${categoryId}`, 404)
-        );
+        return Promise.reject({
+          message: `No document For This Id: ${categoryId}`,
+          statusCode: 404,
+        });
       }
     }),
   validatorMiddleWare,
