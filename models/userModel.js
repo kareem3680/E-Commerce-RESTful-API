@@ -56,6 +56,23 @@ const userSchema = new mongoose.Schema(
       type: Boolean,
       default: true,
     },
+    wishlist: [
+      {
+        type: mongoose.Schema.ObjectId,
+        ref: "Product",
+      },
+    ],
+    addresses: [
+      {
+        id: { type: mongoose.Schema.Types.ObjectId },
+        alias: String,
+        phone: String,
+        details: String,
+        country: String,
+        city: String,
+        postalCode: String,
+      },
+    ],
   },
   { timestamps: true }
 );
@@ -72,12 +89,15 @@ const SetImageURL = (doc) => {
     doc.profileImage = imageURL;
   }
 };
+
 userSchema.post("init", (doc) => {
   SetImageURL(doc);
 });
+
 userSchema.post("save", (doc) => {
   SetImageURL(doc);
 });
+
 const userModel = mongoose.model("User", userSchema);
 
 module.exports = userModel;

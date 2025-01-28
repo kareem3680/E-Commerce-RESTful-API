@@ -1,3 +1,4 @@
+/* eslint-disable no-multi-assign */
 const dotenv = require("dotenv");
 
 dotenv.config({ path: "config.env" });
@@ -39,10 +40,18 @@ const productSchema = new mongoose.Schema(
       trim: true,
       max: [250000, "Too long product Price"],
     },
+    discountPercentage: {
+      type: Number,
+      trim: true,
+      min: [0, "Too short product discountPercentage"],
+      max: [100, "Too long product discountPercentage"],
+      default: 0,
+    },
     priceAfterDiscount: {
       type: Number,
       trim: true,
-      max: [200000, "Too long product PriceAfterDiscount"],
+      max: [2000000, "Too long product PriceAfterDiscount"],
+      default: 0,
     },
     colors: {
       type: [String],
@@ -79,8 +88,36 @@ const productSchema = new mongoose.Schema(
       default: 0,
     },
   },
-  { timestamps: true }
+  {
+    timestamps: true,
+    toObject: { virtuals: true },
+    toJSON: { virtuals: true },
+  }
 );
+
+productSchema.pre("save", function (next) {
+  if (this.price || this.discountPercentage) {
+    const discounted = (this.priceAfterDiscount =
+      this.price * (1 - this.discountPercentage / 100));
+    this.priceAfterDiscount = Math.ceil(discounted);
+  }
+  next();
+});
+
+productSchema.virtual("reviews", {
+  ref: "Review",
+  localField: "_id",
+  foreignField: "product",
+});
+
+productSchema.pre(/^find/, function (next) {
+  this.populate({
+    path: "reviews",
+    select: "title -_id",
+  });
+  next();
+});
+
 productSchema.pre(/^find/, function (next) {
   this.populate({
     path: "category",
@@ -99,16 +136,22 @@ productSchema.pre(/^find/, function (next) {
 
 const SetImageURL = (doc) => {
   if (doc.imageCover) {
-    const imageURL = `${process.env.BASE_URL}/products/${doc.imageCover}`;
-    doc.imageCover = imageURL;
+    if (!doc.imageCover.startsWith(process.env.BASE_URL)) {
+      const imageURL = `${process.env.BASE_URL}/products/${doc.imageCover}`;
+      doc.imageCover = imageURL;
+    }
   }
   if (doc.images) {
-    const imagesLest = [];
+    const imagesList = [];
     doc.images.forEach((image) => {
-      const imageURL = `${process.env.BASE_URL}/products/${image}`;
-      imagesLest.push(imageURL);
+      if (!image.startsWith(process.env.BASE_URL)) {
+        const imageURL = `${process.env.BASE_URL}/products/${image}`;
+        imagesList.push(imageURL);
+      } else {
+        imagesList.push(image);
+      }
     });
-    doc.images = imagesLest;
+    doc.images = imagesList;
   }
 };
 productSchema.post("init", (doc) => {

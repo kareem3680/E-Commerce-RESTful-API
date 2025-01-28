@@ -1,3 +1,4 @@
+/* eslint-disable no-unused-vars */
 const asyncHandler = require("express-async-handler");
 const ApiError = require("../utils/apiError");
 const ApiFeatures = require("../utils/apiFeatures");
@@ -5,26 +6,28 @@ const ApiFeatures = require("../utils/apiFeatures");
 exports.delete = (model) => {
   return asyncHandler(async (req, res, next) => {
     const documentId = req.params.id;
-    const document = await model.findByIdAndDelete({ _id: documentId });
+    const document = await model.findByIdAndDelete(documentId);
     if (!document) {
       return next(new ApiError(`No document For This Id : ${documentId}`, 404));
     }
     res.status(202).json({ msg: `document Deleted Successfully` });
   });
 };
+
 exports.update = (model) => {
   return asyncHandler(async (req, res, next) => {
     const documentId = req.params.id;
     const { password, ...rest } = req.body;
-    const document = await model.findByIdAndUpdate(documentId, rest, {
-      new: true,
-    });
+    const document = await model.findById(documentId);
     if (!document) {
       return next(new ApiError(`No document For This Id : ${documentId}`, 404));
     }
+    Object.assign(document, rest);
+    await document.save();
     res.status(200).json({ data: document });
   });
 };
+
 exports.create = (model) => {
   return asyncHandler(async (req, res, next) => {
     const newDocument = await model.create(req.body);

@@ -25,10 +25,10 @@
     "import/order": "off",
     "import/no-extraneous-dependencies": "off",
     "arrow-body-style": "off",
-    "no-use-before-define": "off",
+    // "no-use-before-define": "off",
     "prefer-promise-reject-errors": "off",
     "node/no-unsupported-features/es-syntax": "off",
     "prefer-destructuring": ["error", { "object": true, "array": false }],
-    "no-unused-vars": ["off", { "argsIgnorePattern": "req|res|next|val" }]
+    "no-unused-vars": ["warn", { "argsIgnorePattern": "req|res|next|val" }]
   }
 }

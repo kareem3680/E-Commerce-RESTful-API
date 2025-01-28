@@ -19,7 +19,10 @@ exports.createUserValidator = [
     .custom((value) =>
       userModel.findOne({ name: value }).then((user) => {
         if (user) {
-          return Promise.reject(new Error("name already exists"));
+          return Promise.reject({
+            message: `name already exists`,
+            statusCode: 404,
+          });
         }
       })
     )
@@ -42,7 +45,10 @@ exports.createUserValidator = [
     .custom((value) =>
       userModel.findOne({ email: value }).then((user) => {
         if (user) {
-          return Promise.reject(new Error("Email already exists"));
+          return Promise.reject({
+            message: `E-Mail already exists`,
+            statusCode: 404,
+          });
         }
       })
     ),
@@ -54,7 +60,10 @@ exports.createUserValidator = [
     .withMessage("password must be at least 6 characters")
     .custom((password, { req }) => {
       if (password !== req.body.passwordConfirmation) {
-        throw new Error("Passwords do not match");
+        return Promise.reject({
+          message: "Passwords do not match",
+          statusCode: 404,
+        });
       }
       return true;
     }),

@@ -40,12 +40,18 @@ exports.createProductValidator = [
     .isNumeric()
     .withMessage("Product price must be a number")
     .isLength({ max: 32 })
-    .withMessage("Too long price"),
+    .withMessage("Too long price")
+    .customSanitizer((value) => {
+      return Math.ceil(value / 5) * 5;
+    }),
   check("priceAfterDiscount")
     .optional()
     .isNumeric()
     .withMessage("Product priceAfterDiscount must be a number")
     .toFloat()
+    .customSanitizer((value) => {
+      return Math.ceil(value / 5) * 5;
+    })
     .custom((value, { req }) => {
       if (req.body.price <= value) {
         return Promise.reject({
@@ -189,12 +195,18 @@ exports.updateProductValidator = [
     .isNumeric()
     .withMessage("Product price must be a number")
     .isLength({ max: 32 })
-    .withMessage("Too long price"),
+    .withMessage("Too long price")
+    .customSanitizer((value) => {
+      return Math.ceil(value / 5) * 5;
+    }),
   check("priceAfterDiscount")
     .optional()
     .isNumeric()
     .withMessage("Product priceAfterDiscount must be a number")
     .toFloat()
+    .customSanitizer((value) => {
+      return Math.ceil(value / 5) * 5;
+    })
     .custom(async (value, { req }) => {
       const product = await productModel.findById(req.params.id);
       if (

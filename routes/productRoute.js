@@ -4,6 +4,9 @@ const productController = require("../Controller/productController");
 const router = express.Router();
 const productValidator = require("../utils/validators/productValidator");
 const authController = require("../Controller/authController");
+const reviewRoute = require("./reviewRoute");
+
+router.use("/:productId/reviews", reviewRoute);
 
 router
   .route("/")
