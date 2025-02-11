@@ -6,7 +6,7 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "start:dev": "cross-env NODE_ENV=development nodemon server.js",
-    "start:prod": "cross-env NODE_ENV=production node server.js"
+    "start": "cross-env NODE_ENV=production node server.js"
   },
   "keywords": [],
   "author": "",
@@ -44,5 +44,8 @@
     "eslint-plugin-prettier": "^5.2.1",
     "eslint-plugin-react": "^7.37.2",
     "prettier": "^3.4.2"
+  },
+  "engines": {
+    "node": "^20.10.0"
   }
 }

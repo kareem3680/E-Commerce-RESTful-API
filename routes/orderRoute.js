@@ -17,11 +17,6 @@ router
     authController.protect,
     authController.allowedTo("user"),
     orderController.createCashOrder
-  )
-  .post(
-    authController.protect,
-    authController.allowedTo("user"),
-    orderController.createCreditOrder
   );
 router
   .route("/checkout-session/:id")

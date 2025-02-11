@@ -3,6 +3,7 @@ const stripe = require("stripe")(process.env.STRIPE_SECRET_KEY);
 const ApiError = require("../utils/apiError");
 const orderModel = require("../models/orderModel");
 const cartModel = require("../models/cartModel");
+const userModel = require("../models/userModel");
 const productModel = require("../models/productModel");
 const settingController = require("./settingController");
 const controllerHandler = require("./controllerHandler");
@@ -40,6 +41,42 @@ exports.createCashOrder = asyncHandler(async (req, res, next) => {
   }
   res.status(201).json({ message: "Order complete", data: order });
 });
+
+const createCreditOrder = async (session) => {
+  const cartId = session.client_reference_id;
+  const shippingAddress = session.metadata;
+  const orderPrice = session.amount_total / 100;
+  const cart = await cartModel.findById(cartId);
+  const user = await userModel.findById({ email: session.customer_email });
+  const taxes = await settingController.useSettings("taxes");
+  const shipping = await settingController.useSettings("shipping");
+  const cartPrice = cart.totalPriceAfterDiscount
+    ? cart.totalPriceAfterDiscount
+    : cart.totalPrice;
+  const order = await orderModel.create({
+    customer: user._id,
+    shippingAddress,
+    items: cart.cartItems,
+    cartPrice: cartPrice,
+    taxes: (cartPrice * taxes) / 100,
+    shipping: shipping,
+    totalOrderPrice: orderPrice,
+    status: "Approved",
+    paymentMethod: "online payment",
+    isPaid: true,
+    paidAt: Date.now(),
+  });
+  if (order) {
+    const bulkOption = cart.cartItems.map((item) => ({
+      updateOne: {
+        filter: { _id: item.product },
+        update: { $inc: { quantity: -item.quantity, sold: +item.quantity } },
+      },
+    }));
+    await productModel.bulkWrite(bulkOption, {});
+    await cartModel.findByIdAndDelete(cartId);
+  }
+};
 
 exports.checkOutSession = asyncHandler(async (req, res, next) => {
   const taxes = await settingController.useSettings("taxes");
@@ -82,7 +119,23 @@ exports.checkOutSession = asyncHandler(async (req, res, next) => {
   res.status(200).json({ message: "success", data: session });
 });
 
-exports.createCreditOrder = asyncHandler(async (req, res, next) => {});
+exports.webhookCheckout = asyncHandler(async (req, res, next) => {
+  const sig = req.headers["stripe-signature"];
+  let event;
+  try {
+    event = stripe.webhooks.constructEvent(
+      req.body,
+      sig,
+      process.env.STRIPE_WEBHOOK_SECRET_KEY
+    );
+  } catch (err) {
+    return res.status(400).send(`WebHook err ${err.message}`);
+  }
+  if (event.type === "checkout.session.completed") {
+    createCreditOrder(event.data.object);
+  }
+  res.status(200).json({ received: true });
+});
 
 exports.updateOrderStatus = asyncHandler(async (req, res, next) => {
   const order = await orderModel.findById(req.params.id);
