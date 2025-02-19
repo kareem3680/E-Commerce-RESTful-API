@@ -2,6 +2,7 @@ const dotenv = require("dotenv");
 const JWT = require("jsonwebtoken");
 const asyncHandler = require("express-async-handler");
 const createToken = require("../utils/createToken");
+const sanitize = require("../utils/sanitizeData");
 const userModel = require("../models/userModel");
 const ApiError = require("../utils/apiError");
 
@@ -15,7 +16,7 @@ exports.signUp = asyncHandler(async (req, res, next) => {
     phone: req.body.phone,
   });
   const token = createToken(user._id);
-  res.status(201).json({ data: user, token });
+  res.status(201).json({ data: sanitize.sanitizeUser(user), token });
 });
 
 exports.logIn = asyncHandler(async (req, res, next) => {
@@ -31,7 +32,7 @@ exports.logIn = asyncHandler(async (req, res, next) => {
     );
   }
   const token = createToken(user._id);
-  res.status(200).json({ data: user, token });
+  res.status(200).json({ data: sanitize.sanitizeUser(user), token });
 });
 
 exports.protect = asyncHandler(async (req, res, next) => {
