@@ -1,3 +1,4 @@
+/* eslint-disable new-cap */
 const dotenv = require("dotenv");
 const JWT = require("jsonwebtoken");
 const asyncHandler = require("express-async-handler");
@@ -5,8 +6,10 @@ const createToken = require("../utils/createToken");
 const sanitize = require("../utils/sanitizeData");
 const userModel = require("../models/userModel");
 const ApiError = require("../utils/apiError");
+const logger = require("../services/logger");
 
 dotenv.config({ path: "config.env" });
+const logging = new logger("authController");
 
 exports.signUp = asyncHandler(async (req, res, next) => {
   const user = await userModel.create({
@@ -16,6 +19,7 @@ exports.signUp = asyncHandler(async (req, res, next) => {
     phone: req.body.phone,
   });
   const token = createToken(user._id);
+  logging.info(`User with email ${user.email} has signed up successfully.`);
   res.status(201).json({ data: sanitize.sanitizeUser(user), token });
 });
 
@@ -32,6 +36,7 @@ exports.logIn = asyncHandler(async (req, res, next) => {
     );
   }
   const token = createToken(user._id);
+  logging.info(`User with email ${user.email} has logged in successfully.`);
   res.status(200).json({ data: sanitize.sanitizeUser(user), token });
 });
 

@@ -1,3 +1,5 @@
+/* eslint-disable no-undef */
+/* eslint-disable no-case-declarations */
 const asyncHandler = require("express-async-handler");
 const stripe = require("stripe")(process.env.STRIPE_SECRET_KEY);
 const ApiError = require("../utils/apiError");
@@ -44,10 +46,10 @@ exports.createCashOrder = asyncHandler(async (req, res, next) => {
 
 const createCreditOrder = async (session) => {
   const cartId = session.client_reference_id;
-  const shippingAddress = session.metadata;
+  const shippingAddress = session.customer_details.address;
   const orderPrice = session.amount_total / 100;
   const cart = await cartModel.findById(cartId);
-  const user = await userModel.findById({ email: session.customer_email });
+  const user = await userModel.findOne({ email: session.customer_email });
   const taxes = await settingController.useSettings("taxes");
   const shipping = await settingController.useSettings("shipping");
   const cartPrice = cart.totalPriceAfterDiscount
@@ -120,21 +122,36 @@ exports.checkOutSession = asyncHandler(async (req, res, next) => {
 });
 
 exports.webhookCheckout = asyncHandler(async (req, res, next) => {
-  const sig = req.headers["stripe-signature"];
-  let event;
-  try {
-    event = stripe.webhooks.constructEvent(
-      req.body,
-      sig,
-      process.env.STRIPE_WEBHOOK_SECRET_KEY
-    );
-  } catch (err) {
-    return res.status(400).send(`WebHook err ${err.message}`);
+  let event = req.body;
+  const endpointSecret = process.env.STRIPE_WEBHOOK_SECRET_KEY;
+  if (endpointSecret) {
+    const signature = req.headers["stripe-signature"];
+    try {
+      event = stripe.webhooks.constructEvent(
+        req.body,
+        signature,
+        endpointSecret
+      );
+    } catch (err) {
+      console.log(`⚠️  Webhook signature verification failed.`, err.message);
+      return res.sendStatus(400);
+    }
   }
-  if (event.type === "checkout.session.completed") {
-    createCreditOrder(event.data.object);
+
+  switch (event.type) {
+    case "checkout.session.completed":
+      const session = event.data.object;
+      await createCreditOrder(session);
+      console.log(
+        `PaymentIntent for ${session.amount_total / 100} was successful!`
+      );
+      break;
+
+    default:
+      console.log(`Unhandled event type ${event.type}.`);
   }
-  res.status(200).json({ received: true });
+
+  res.send();
 });
 
 exports.updateOrderStatus = asyncHandler(async (req, res, next) => {

@@ -10,19 +10,7 @@ exports.addAddressValidator = [
     .isLength({ min: 3 })
     .withMessage("alias must be at least 3 characters")
     .isLength({ max: 10 })
-    .withMessage("alias must be at most 10 characters")
-    .custom((value) =>
-      userModel
-        .findOne({ addresses: { $elemMatch: { alias: value } } })
-        .then((user) => {
-          if (user) {
-            return Promise.reject({
-              message: "alias already exists",
-              statusCode: 404,
-            });
-          }
-        })
-    ),
+    .withMessage("alias must be at most 10 characters"),
   check("details")
     .notEmpty()
     .withMessage("details is required")

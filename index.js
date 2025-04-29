@@ -17,13 +17,11 @@ const globalError = require("./middlewares/errorMiddleware");
 const ApiError = require("./utils/apiError");
 const controller = require("./Controller/orderController");
 
-// usage
+// Application
 const app = express();
+app.set("trust proxy", 1);
 app.use(cors());
 app.options("*", cors());
-app.use(compression());
-app.use(express.json({ limit: "50 kb" }));
-app.use(express.static(path.join(__dirname, "uploads")));
 
 //WebHook
 app.post(
@@ -31,6 +29,11 @@ app.post(
   express.raw({ type: "application/json" }),
   controller.webhookCheckout
 );
+
+// usage
+app.use(compression());
+app.use(express.json({ limit: "50 kb" }));
+app.use(express.static(path.join(__dirname, "uploads")));
 
 // DB Connection
 dotenv.config({ path: "config.env" });
@@ -46,7 +49,7 @@ app.use(mongoSanitize());
 app.use([body("*").trim().escape()]);
 const limiter = rateLimit({
   windowMs: 15 * 60 * 1000,
-  max: 4,
+  max: 50,
   message: "Too many requests from this IP, please try again after 15 minutes.",
 });
 app.use("/api", limiter);

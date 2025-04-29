@@ -2,11 +2,11 @@
   "name": "e-commerce-website-restful-api",
   "version": "1.0.0",
   "description": "",
-  "main": "server.js",
+  "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "start:dev": "cross-env NODE_ENV=development nodemon server.js",
-    "start": "cross-env NODE_ENV=production node server.js"
+    "start:dev": "cross-env NODE_ENV=development nodemon index.js",
+    "start": "cross-env NODE_ENV=production node index.js"
   },
   "keywords": [],
   "author": "",
@@ -35,7 +35,8 @@
     "sharp": "^0.33.5",
     "slugify": "^1.6.6",
     "stripe": "^17.6.0",
-    "uuid": "^11.0.3"
+    "uuid": "^11.0.3",
+    "winston": "^3.17.0"
   },
   "devDependencies": {
     "eslint": "^8.57.1",
